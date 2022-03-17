@@ -1,0 +1,91 @@
+function add_xml_order_function() {
+
+  $orderxml_dir = plugin_dir_path( __FILE__ ) . '/folder_name';
+  $orderxml_filenames = scandir($orderxml_dir);
+
+  $i = 0;
+  foreach ($orderxml_filenames as $row) {
+    if( $i++ < 2){
+            continue;
+        }
+
+$url = plugin_dir_path( __FILE__ ) . "/folder_name/$row";
+
+  $xml = XMLReader::open($url);
+  $doc = new DOMDocument;
+  $member= array();
+
+
+  while ($xml->read()) {
+
+      if($xml->nodeType == XMLREADER::ELEMENT && $xml->localName == 'CustomerDocumentId'){
+        $purchase_order_no_node = simplexml_import_dom($doc->importNode($xml->expand(), true));
+        $purchase_order_no = $purchase_order_no_node->Id;
+
+    }
+
+    if($xml->nodeType == XMLREADER::ELEMENT && $xml->localName == 'DocumentDateTime'){
+          $purchase_order_date = simplexml_import_dom($doc->importNode($xml->expand(), true));
+
+    }
+
+    if($xml->nodeType == XMLREADER::ELEMENT && $xml->localName == 'Party'){
+      $delivery_info_node = simplexml_import_dom($doc->importNode($xml->expand(), true));
+
+      $delivery_info_fname = $delivery_info_node->Name[0];
+      $delivery_info_lname = $delivery_info_node->Name[1];
+      $delivery_info_address_street = $delivery_info_node->Addresses->Address->AddressLine;
+      $delivery_info_address_city = $delivery_info_node->Addresses->Address->City;
+      $delivery_info_address_country = $delivery_info_node->Addresses->Address->Country;
+      $delivery_info_address_postal = $delivery_info_node->Addresses->Address->PostalCode;
+
+    }
+
+    // info about supplier dont need this info stays same
+    if($xml->nodeType == XMLREADER::ELEMENT && $xml->localName == 'BuyerParty'){
+      $buyer_info_node = simplexml_import_dom($doc->importNode($xml->expand(), true));
+
+      $buyer_info_id = $buyer_info_node->AlternatePartyIds->CustomerPartyId->Id;
+      $buyer_info_name = $buyer_info_node->Name;
+      $buyer_info_address_street = $buyer_info_node->Addresses->Address->AddressLine;
+      $buyer_info_address_city = $buyer_info_node->Addresses->Address->City;
+      $buyer_info_address_country = $buyer_info_node->Addresses->Address->Country;
+      $buyer_info_address_postal = $buyer_info_node->Addresses->Address->PostalCode;
+
+    }
+
+    // Delivery info order non , telephone , email
+    if($xml->nodeType == XMLREADER::ELEMENT && $xml->localName == 'UserDefined11'){
+      $sale_order_no_node[] = simplexml_import_dom($doc->importNode($xml->expand(), true));
+      $sale_order_no = $sale_order_no_node[0];
+
+    }
+
+    if($xml->nodeType == XMLREADER::ELEMENT && $xml->localName == 'UserDefined12'){
+    $customer_telephone_node[] = simplexml_import_dom($doc->importNode($xml->expand(), true));
+    $customer_telephone = $customer_telephone_node[0];
+    }
+    if($xml->nodeType == XMLREADER::ELEMENT && $xml->localName == 'UserDefined13'){
+    $customer_email_node[] = simplexml_import_dom($doc->importNode($xml->expand(), true));
+      $customer_email = $customer_email_node[0];
+    }
+
+
+
+    // product line no product quantity, product id, orderdate, line no
+      if($xml->nodeType == XMLREADER::ELEMENT && $xml->localName == 'Line'){
+          $product_id_data[] = $xml->readOuterXML();
+
+      }
+
+
+
+//end while
+  }
+
+
+
+ 
+
+// end function
+}
